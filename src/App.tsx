@@ -1,11 +1,15 @@
 import {useEffect, useRef, useState} from 'react'
 import './App.css'
 import {interval, map, take} from "rxjs";
+import blueCat from './blue_working_cat_animation.json';
+import laughingCat from './laughing_cat.json';
+import Lottie from "lottie-react";
 
 function App() {
     const [count, setCount] = useState<number>(0);
     const [isRunning, setIsRunning] = useState<boolean>(false);
     const [isCompleted, setIsCompleted] = useState<boolean>(false);
+    const [animationData, setAnimationData] = useState<any>(laughingCat);
 
     const subscriptionRef = useRef<any>(null);
 
@@ -33,6 +37,7 @@ function App() {
                 console.log("Поток завершен");
                 setIsCompleted(true);
                 setIsRunning(false);
+                setAnimationData(blueCat);
             }
         }
 
@@ -42,7 +47,7 @@ function App() {
 
         // 4. Отприсываемся при размонтирвоании компонента
         return () => {
-            subscription.unsubscribe();
+                subscription.unsubscribe();
             console.log("Отписка от потока")
         }
     }, [isRunning]);
@@ -50,12 +55,14 @@ function App() {
     const handleStart = () => {
         setIsCompleted(false);
         setIsRunning(true);
+        setAnimationData(laughingCat)
     };
 
     const handleComplete = () => {
         setIsRunning(false);
         subscriptionRef.current?.unsubscribe();
         setIsCompleted(true);
+        setAnimationData(blueCat)
     };
 
     return (
@@ -63,9 +70,15 @@ function App() {
             <h2>RxJS Counter</h2>
             <p>Текущее значение: {count}</p>
 
-            {isCompleted && <p style={{ color: 'green' }}>✅ Поток завершён</p>}
+            {(isRunning || isCompleted) &&
+                <div style={{width: 200, margin: '0 auto'}}>
+                    <Lottie animationData={animationData} loop={isRunning} autoplay/>
+                </div>
+            }
 
-            <div style={{ marginTop: '1rem' }}>
+            {isCompleted && <p style={{color: 'green'}}>✅ Поток завершён</p>}
+
+            <div style={{marginTop: '1rem'}}>
                 <button onClick={handleStart} disabled={isRunning}>
                     ▶ Старт
                 </button>
