@@ -1,13 +1,13 @@
 import {useEffect, useState} from 'react'
 import './App.css'
-import {interval} from "rxjs";
+import {interval, take} from "rxjs";
 
 function App() {
     const [count, setCount] = useState<number>(0);
 
     useEffect(() => {
         // 1. Создаём Observable (генерирует число каждую секунду)
-        const source$ = interval(1000);
+       const source$ = interval(1000).pipe(take(10));
 
         // 2. Создаём кастомный Observer
         const observer = {
