@@ -4,6 +4,7 @@ import {interval, map, take} from "rxjs";
 import blueCat from './blue_working_cat_animation.json';
 import laughingCat from './laughing_cat.json';
 import Lottie from "lottie-react";
+import * as THREE from "three";
 
 function App() {
     const [count, setCount] = useState<number>(0);
@@ -12,6 +13,68 @@ function App() {
     const [animationData, setAnimationData] = useState<any>(laughingCat);
 
     const subscriptionRef = useRef<any>(null);
+    const threeContainerRef = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+        if (!threeContainerRef.current) return;
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x222222);
+
+        const camera = new THREE.PerspectiveCamera(
+            75,
+            threeContainerRef.current.clientWidth /
+            threeContainerRef.current.clientHeight,
+            0.1,
+            1000
+        );
+        camera.position.z = 3;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(
+            threeContainerRef.current.clientWidth,
+            threeContainerRef.current.clientHeight
+        );
+
+        threeContainerRef.current.innerHTML = "";
+        threeContainerRef.current.appendChild(renderer.domElement);
+
+        const geometry = new THREE.BoxGeometry();
+        const material = new THREE.MeshStandardMaterial({ color: 0x00ff88 });
+        const cube = new THREE.Mesh(geometry, material);
+        scene.add(cube);
+
+        const light = new THREE.PointLight(0xffffff, 1);
+        light.position.set(3, 3, 3);
+        scene.add(light);
+
+        const animate = () => {
+            cube.rotation.x += 0.01;
+            cube.rotation.y += 0.01;
+            renderer.render(scene, camera);
+            requestAnimationFrame(animate);
+        };
+        animate();
+
+        const handleResize = () => {
+            if (!threeContainerRef.current) return;
+            camera.aspect =
+                threeContainerRef.current.clientWidth /
+                threeContainerRef.current.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(
+                threeContainerRef.current.clientWidth,
+                threeContainerRef.current.clientHeight
+            );
+        };
+        window.addEventListener("resize", handleResize);
+
+        return () => {
+            window.removeEventListener("resize", handleResize);
+            threeContainerRef.current?.removeChild(renderer.domElement);
+            renderer.dispose();
+        };
+    }, []);
 
     useEffect(() => {
         if (!isRunning) {
@@ -75,6 +138,17 @@ function App() {
                     <Lottie animationData={animationData} loop={isRunning} autoplay/>
                 </div>
             }
+
+            <div
+                ref={threeContainerRef}
+                style={{
+                    width: "300px",
+                    height: "300px",
+                    margin: "20px auto",
+                    border: "1px solid #444",
+                    borderRadius: "8px",
+                }}
+            />
 
             {isCompleted && <p style={{color: 'green'}}>✅ Поток завершён</p>}
 
